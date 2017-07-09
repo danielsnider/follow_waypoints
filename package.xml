@@ -1,0 +1,28 @@
+<package>
+  <name>follow_waypoints</name>
+  <version>0.1.0</version>
+  <description>
+      The follow_waypoints node will listen for waypoints given as
+      poses and when instructed will follow them one by one by publishing goals
+      to move_base.
+  </description>
+  <maintainer email="danielsnider12@gmail.com">Daniel Snider</maintainer>
+  <license>UNLICENSE</license>
+  <url type="website">http://wiki.ros.org/follow_waypoints</url>
+  <url type="repository">https://github.com/danielsnider/follow_waypoints</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>actionlib</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>move_base_msgs</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>smach</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <run_depend>actionlib</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>move_base_msgs</run_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>smach</run_depend>
+  <run_depend>std_msgs</run_depend>
+
+</package>
