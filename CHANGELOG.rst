@@ -2,6 +2,6 @@
 Changelog for package follow_waypoints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.0.0 (2017-07-09)
+0.1.0 (2017-07-09)
 ------------------
 * first release
