@@ -1,6 +1,6 @@
 # follow_waypoints
 
-A package that will buffer `move_base` goals until instructed to navigate to them in sequence.
+A package that will buffer `move_base` goals until instructed to navigate to all waypoints in sequence.
 
 Wiki page: [http://wiki.ros.org/follow_waypoints](http://wiki.ros.org/follow_waypoints)
 
