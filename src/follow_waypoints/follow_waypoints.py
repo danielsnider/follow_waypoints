@@ -13,15 +13,18 @@ from std_msgs.msg import Empty
 class FollowPath(State):
     def __init__(self):
         State.__init__(self, outcomes=['success'], input_keys=['waypoints'])
+        self.frame_id = rospy.get_param('~goal_frame_id','map')
         # Get a move_base action client
         self.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
+        rospy.loginfo('Connecting to move_base...')
         self.client.wait_for_server()
+        rospy.loginfo('Connected to move_base.')
 
     def execute(self, userdata):
         # Execute waypoints each in sequence
         for waypoint in userdata.waypoints:
             goal = MoveBaseGoal()
-            goal.target_pose.header.frame_id = 'map'
+            goal.target_pose.header.frame_id = self.frame_id
             goal.target_pose.pose.position = waypoint.pose.pose.position
             goal.target_pose.pose.orientation = waypoint.pose.pose.orientation
             rospy.loginfo('Executing move_base goal to position (x,y): %s, %s' %
@@ -87,7 +90,7 @@ class PathComplete(State):
         return 'success'
 
 def main():
-    rospy.init_node('autonomous')
+    rospy.init_node('follow_waypoints')
 
     sm = StateMachine(outcomes=['success'])
     sm.userdata.waypoints = []
@@ -101,8 +104,5 @@ def main():
                            remapping={'waypoints':'waypoints'})
         StateMachine.add('PATH_COMPLETE', PathComplete(),
                            transitions={'success':'GET_PATH'})
-
-    # TODO: Support lost communications
-    # TODO: Add some smart action on timeout of a move_base goal
 
     outcome = sm.execute()
