@@ -1,30 +1,30 @@
 # follow_waypoints
 
-A package that will buffer move_base goals until instructed to navigate to them in sequence.
+A package that will buffer `move_base` goals until instructed to navigate to them in sequence.
 
 Wiki page: [http://wiki.ros.org/follow_waypoints](http://wiki.ros.org/follow_waypoints)
 
-![follow_waypoints](https://github.com/danielsnider/follow_waypoints/blob/master/readme_images/follow_waypoints_rviz.gif "rviz")
+![follow_waypoints](https://github.com/danielsnider/follow_waypoints/blob/master/readme_images/follow_waypoints_rviz.png "rviz")
 
 ## Quick Start
 
 **Install:**
 
 ```
-  $ sudo apt-get install ros-kinetic-rover-follow-waypoints #(package WIP)
+  $ sudo apt-get install ros-kinetic-follow-waypoints
 ```
 
 **Run:**
 
 ```
-  $ roslaunch rover_follow_waypoints follow_waypoints.py
+  $ roslaunch follow_waypoints follow_waypoints.launch
 ```
 
 ## Usage
 
-To set waypoints you can either publish a ROS Pose message to the /initialpose topic directly or use RViz’s tool “2D Pose Estimate” to click anywhere. Figure 3 shows the resulting pink arrows representing the current waypoints in RViz. To visualize the waypoints in this way the topic /current_waypoints is published by follow_waypoints.py and must be subscribed to in Rviz as a PoseAarray type.
+To set waypoints you can either publish a ROS `PoseWithCovarianceStamped` message to the `/initialpose` topic directly or use RViz’s tool "2D Pose Estimate" to click anywhere. To visualize the waypoints as pink arrows in RViz, configure RViz to display the topic `/current_waypoints` which is published by `follow_waypoints` and must be subscribed to in Rviz as a `PoseAarray` type.
 
-To initiate waypoint following send a “path ready” message.
+To initiate waypoint following send a "path ready" message.
 
 ```
   $ rostopic pub /path_ready std_msgs/Empty -1
@@ -33,7 +33,7 @@ To initiate waypoint following send a “path ready” message.
 ### Normal Output
 
 ```bash
-  $ roslaunch rover_follow_waypoints follow_waypoints.py
+  $ roslaunch follow_waypoints follow_waypoints.launch
   [  INFO ] : State machine starting in initial state 'GET_PATH' with userdata: ['waypoints']
   [INFO] [1497201258.613819, 48756.024000]: Waiting to receive waypoints via Pose msg on topic /initialpose
   [INFO] [1497201258.614702, 48756.024000]: To start following waypoints: 'rostopic pub /path_ready 
@@ -74,19 +74,19 @@ To initiate waypoint following send a “path ready” message.
 `~goal_frame_id` (`string`, default: "`map`")  
   The tf frame for move_base goals.
 
+## Detailed Description
+
+The follow_waypoints package uses actionlib to send the goals to move_base.
+
+The code for follow_waypoints is structured as a barebones state machine. For this reason it is easy to add to the script complex behavior controlled by defined transitions (ie. a state machine). For modifying the script to be an easy task, you should learn about the Python state machine library in ROS called smach. The state transitions in the script occur in the order GET_PATH, FOLLOW_PATH, and PATH_COMPLETE and then they repeat.
+
 ## Usage in the University Rover Competition (URC)
 
 Waypoint following could find usefulness at URC in the following ways:
 
 - To search a variety of locations, ideally faster than by teleoperation
 - To allow for assisted autonomous obstacle avoidance where an obstacle is known to fail detection
-- To navigate to multiple goals in the autonomous task with a single command (use in combination with GPS goals)
-
-## Detailed Description
-
-The follow_waypoints package uses actionlib to send the goals to move_base.
-
-The code for follow_waypoints.py is structured as a barebones state machine. For this reason it is easy to add to the script complex behavior controlled by defined transitions (ie. a state machine). For modifying the script to be an easy task, you should learn about the Python state machine library in ROS called smach. The state transitions in the script occur in the order GET_PATH, FOLLOW_PATH, and PATH_COMPLETE and then they repeat.
+- To navigate to multiple goals in the autonomous task with a single command
 
 ## Feature Wishlist
 
