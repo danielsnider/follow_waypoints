@@ -7,7 +7,8 @@
       to move_base.
   </description>
   <maintainer email="danielsnider12@gmail.com">Daniel Snider</maintainer>
-  <license>UNLICENSE</license>
+  <author email="danielsnider12@gmail.com">Daniel Snider</author>
+  <license>Unlicense</license>
   <url type="website">http://wiki.ros.org/follow_waypoints</url>
   <url type="repository">https://github.com/danielsnider/follow_waypoints</url>
 
