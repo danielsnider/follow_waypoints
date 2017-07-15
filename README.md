@@ -22,3 +22,4 @@ To initiate waypoint following send a "path ready" message.
   $ rostopic pub /path_ready std_msgs/Empty -1
 ```
 
+**Full documentation on wiki: [http://wiki.ros.org/follow_waypoints](http://wiki.ros.org/follow_waypoints)**
