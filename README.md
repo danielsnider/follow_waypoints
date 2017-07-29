@@ -10,14 +10,4 @@ A package that will buffer `move_base` goals until instructed to navigate to all
   $ sudo apt-get install ros-kinetic-follow-waypoints
 ```
 
-## Usage
-
-To set waypoints you can either publish a ROS `PoseWithCovarianceStamped` message to the `/initialpose` topic directly or use RViz’s tool "2D Pose Estimate" to click anywhere. To visualize the waypoints as pink arrows in RViz, configure RViz to display the topic `/current_waypoints` which is published by `follow_waypoints` and must be subscribed to in Rviz as a `PoseAarray` type.
-
-To initiate waypoint following send a "path ready" message.
-
-```
-  $ rostopic pub /path_ready std_msgs/Empty -1
-```
-
 **Full documentation on wiki: [http://wiki.ros.org/follow_waypoints](http://wiki.ros.org/follow_waypoints)**
