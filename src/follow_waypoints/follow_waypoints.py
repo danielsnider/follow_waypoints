@@ -3,6 +3,7 @@
 import threading
 import rospy
 import actionlib
+import time
 
 from smach import State,StateMachine
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
@@ -14,7 +15,8 @@ waypoints = []
 class FollowPath(State):
     def __init__(self):
         State.__init__(self, outcomes=['success'], input_keys=['waypoints'])
-        self.frame_id = rospy.get_param('~goal_frame_id','map')
+        self.frame_id = rospy.get_param('~goal_frame_id', 'map')
+        self.duration = rospy.get_param('~wait_duration', 0.0)
         # Get a move_base action client
         self.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
         rospy.loginfo('Connecting to move_base...')
@@ -39,6 +41,8 @@ class FollowPath(State):
             rospy.loginfo("To cancel the goal: 'rostopic pub -1 /move_base/cancel actionlib_msgs/GoalID -- {}'")
             self.client.send_goal(goal)
             self.client.wait_for_result()
+            rospy.loginfo("Waiting for %f sec..." % self.duration)
+            time.sleep(self.duration)
         return 'success'
 
 def convert_PoseWithCovArray_to_PoseArray(waypoints):
