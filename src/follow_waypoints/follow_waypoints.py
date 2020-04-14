@@ -32,15 +32,7 @@ class FollowPath(State):
         self.listener = tf.TransformListener()
         self.distance_tolerance = rospy.get_param('waypoint_distance_tolerance',.5)
 
-        #self.sub_tf = rospy.Subscriber("/tf", PointStamped, self.some_method)
-        
-        
-    # def some_method(self, point_stamped):
-        
-    #     if self.tf.frameExists("/odom") and self.tf.frameExists("/map"):
-    #         t = self.tf.getLatestCommonTime("/odom", "/map")
-    #         position, quaternion = self.tf.lookupTransform("/odom", "/map", t)
-    #         print position.pose
+       
         
 
     def execute(self, userdata):
