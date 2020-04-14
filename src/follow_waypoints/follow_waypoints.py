@@ -15,6 +15,14 @@ from tf import TransformListener
 import tf
 import math
 
+##added by chris for getting package path
+import rospkg
+
+## added for accessing csv files
+import csv
+
+output_file_path = rospkg.RosPack().get_path('follow_waypoints')+"/saved_path/pose.csv"
+
 
 waypoints = []
 
@@ -57,9 +65,7 @@ class FollowPath(State):
                 now = rospy.Time.now()
                 self.listener.waitForTransform('odom', 'base_link', now, rospy.Duration(4.0))
                 trans,rot = self.listener.lookupTransform('odom','base_footprint', now)
-                print trans
                 distance = math.sqrt(pow(waypoint.pose.pose.position.x-trans[0],2)+pow(waypoint.pose.pose.position.y-trans[1],2))
-                print(distance)
                 
             #self.client.wait_for_result()
         return 'success'
@@ -108,15 +114,50 @@ class GetPath(State):
             data = rospy.wait_for_message('/path_ready', Empty)
             rospy.loginfo('Recieved path READY message')
             self.path_ready = True
+            with open(output_file_path, 'w') as file:
+                for current_pose in waypoints:
+                    file.write(str(current_pose.pose.pose.position.x) + ',' + str(current_pose.pose.pose.position.y) + ',' + str(current_pose.pose.pose.position.z) + ',' + str(current_pose.pose.pose.orientation.x) + ',' + str(current_pose.pose.pose.orientation.y) + ',' + str(current_pose.pose.pose.orientation.z) + ',' + str(current_pose.pose.pose.orientation.w)+ '\n')
+	        rospy.loginfo('poses written to '+ output_file_path)	
         ready_thread = threading.Thread(target=wait_for_path_ready)
         ready_thread.start()
+
+        self.start_journey_bool = False
+
+        # Start thread to listen start jorney
+        def wait_for_start_journey():
+            """thread worker function"""
+            data_from_start_journey = rospy.wait_for_message('start_journey', Empty)
+            rospy.loginfo('Recieved path READY start_journey')
+            # Wait for published waypoints
+            with open(output_file_path, 'r') as file:
+                reader = csv.reader(file, delimiter = ',')
+                for row in reader:
+                    print row
+                    current_pose = PoseWithCovarianceStamped() 
+                    current_pose.pose.pose.position.x     =    float(row[0])
+                    current_pose.pose.pose.position.y     =    float(row[1])
+                    current_pose.pose.pose.position.z     =    float(row[2])
+                    current_pose.pose.pose.orientation.x = float(row[3])
+                    current_pose.pose.pose.orientation.y = float(row[4])
+                    current_pose.pose.pose.orientation.z = float(row[5])
+                    current_pose.pose.pose.orientation.w = float(row[6])
+                    waypoints.append(current_pose)
+                    self.poseArray_publisher.publish(convert_PoseWithCovArray_to_PoseArray(waypoints))
+            self.start_journey_bool = True
+            
+            
+        start_journey_thread = threading.Thread(target=wait_for_start_journey)
+        start_journey_thread.start()
 
         topic = "/initialpose"
         rospy.loginfo("Waiting to recieve waypoints via Pose msg on topic %s" % topic)
         rospy.loginfo("To start following waypoints: 'rostopic pub /path_ready std_msgs/Empty -1'")
+        rospy.loginfo("OR")
+        rospy.loginfo("To start following saved waypoints: 'rostopic pub /start_journey std_msgs/Empty -1'")
 
-        # Wait for published waypoints
-        while not self.path_ready:
+
+        # Wait for published waypoints or saved path not loaded
+        while (not self.path_ready and not self.start_journey_bool):
             try:
                 pose = rospy.wait_for_message(topic, PoseWithCovarianceStamped, timeout=1)
             except rospy.ROSException as e:
