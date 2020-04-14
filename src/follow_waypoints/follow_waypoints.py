@@ -3,25 +3,45 @@
 import threading
 import rospy
 import actionlib
-import time
 
 from smach import State,StateMachine
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-from geometry_msgs.msg import PoseWithCovarianceStamped, PoseArray
+from geometry_msgs.msg import PoseWithCovarianceStamped, PoseArray ,PointStamped
 from std_msgs.msg import Empty
+
+
+from tf import TransformListener
+
+import tf
+import math
+
 
 waypoints = []
 
 class FollowPath(State):
     def __init__(self):
         State.__init__(self, outcomes=['success'], input_keys=['waypoints'])
-        self.frame_id = rospy.get_param('~goal_frame_id', 'map')
-        self.duration = rospy.get_param('~wait_duration', 0.0)
+        self.frame_id = rospy.get_param('~goal_frame_id','map')
         # Get a move_base action client
         self.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
         rospy.loginfo('Connecting to move_base...')
         self.client.wait_for_server()
         rospy.loginfo('Connected to move_base.')
+        rospy.loginfo('Starting a tf listner.')
+        self.tf = TransformListener()
+        self.listener = tf.TransformListener()
+        self.distance_tolerance = rospy.get_param('waypoint_distance_tolerance',.5)
+
+        #self.sub_tf = rospy.Subscriber("/tf", PointStamped, self.some_method)
+        
+        
+    # def some_method(self, point_stamped):
+        
+    #     if self.tf.frameExists("/odom") and self.tf.frameExists("/map"):
+    #         t = self.tf.getLatestCommonTime("/odom", "/map")
+    #         position, quaternion = self.tf.lookupTransform("/odom", "/map", t)
+    #         print position.pose
+        
 
     def execute(self, userdata):
         global waypoints
@@ -40,15 +60,22 @@ class FollowPath(State):
                     (waypoint.pose.pose.position.x, waypoint.pose.pose.position.y))
             rospy.loginfo("To cancel the goal: 'rostopic pub -1 /move_base/cancel actionlib_msgs/GoalID -- {}'")
             self.client.send_goal(goal)
-            self.client.wait_for_result()
-            rospy.loginfo("Waiting for %f sec..." % self.duration)
-            time.sleep(self.duration)
+            distance = 10
+            while(distance > self.distance_tolerance ):
+                now = rospy.Time.now()
+                self.listener.waitForTransform('odom', 'base_link', now, rospy.Duration(4.0))
+                trans,rot = self.listener.lookupTransform('odom','base_footprint', now)
+                print trans
+                distance = math.sqrt(pow(waypoint.pose.pose.position.x-trans[0],2)+pow(waypoint.pose.pose.position.y-trans[1],2))
+                print(distance)
+                
+            #self.client.wait_for_result()
         return 'success'
 
 def convert_PoseWithCovArray_to_PoseArray(waypoints):
     """Used to publish waypoints as pose array so that you can see them in rviz, etc."""
     poses = PoseArray()
-    poses.header.frame_id = rospy.get_param('~goal_frame_id','map')
+    poses.header.frame_id = 'map'
     poses.poses = [pose.pose.pose for pose in waypoints]
     return poses
 
@@ -56,14 +83,14 @@ class GetPath(State):
     def __init__(self):
         State.__init__(self, outcomes=['success'], input_keys=['waypoints'], output_keys=['waypoints'])
         # Create publsher to publish waypoints as pose array so that you can see them in rviz, etc.
-        self.poseArray_publisher = rospy.Publisher('waypoints', PoseArray, queue_size=1)
+        self.poseArray_publisher = rospy.Publisher('/waypoints', PoseArray, queue_size=1)
 
         # Start thread to listen for reset messages to clear the waypoint queue
         def wait_for_path_reset():
             """thread worker function"""
             global waypoints
             while not rospy.is_shutdown():
-                data = rospy.wait_for_message('path_reset', Empty)
+                data = rospy.wait_for_message('/path_reset', Empty)
                 rospy.loginfo('Recieved path RESET message')
                 self.initialize_path_queue()
                 rospy.sleep(3) # Wait 3 seconds because `rostopic echo` latches
@@ -86,13 +113,13 @@ class GetPath(State):
         # Start thread to listen for when the path is ready (this function will end then)
         def wait_for_path_ready():
             """thread worker function"""
-            data = rospy.wait_for_message('path_ready', Empty)
+            data = rospy.wait_for_message('/path_ready', Empty)
             rospy.loginfo('Recieved path READY message')
             self.path_ready = True
         ready_thread = threading.Thread(target=wait_for_path_ready)
         ready_thread.start()
 
-        topic = "initialpose"
+        topic = "/initialpose"
         rospy.loginfo("Waiting to recieve waypoints via Pose msg on topic %s" % topic)
         rospy.loginfo("To start following waypoints: 'rostopic pub /path_ready std_msgs/Empty -1'")
 
