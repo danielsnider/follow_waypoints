@@ -10,11 +10,17 @@ rosrun follow_waypoints follow_waypoints.py
  
 ```
 
-to save the path follow the usual
+to save the path follow the usual procedure of click with 2DPoseEstimate 
 
 ```
 rostopic pub /path_ready std_msgs/Empty -1
 ```
+This will save the list of pose in the following directory
+
+```
+follow_waypoints/saved_path/pose.csv
+```
+
 
 to load a previously save path
 
