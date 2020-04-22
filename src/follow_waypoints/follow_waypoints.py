@@ -3,33 +3,28 @@
 import threading
 import rospy
 import actionlib
-
 from smach import State,StateMachine
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from geometry_msgs.msg import PoseWithCovarianceStamped, PoseArray ,PointStamped
 from std_msgs.msg import Empty
-
-
 from tf import TransformListener
-
 import tf
 import math
-
-##added by chris for getting package path
 import rospkg
-
-## added for accessing csv files
 import csv
 
+
+
 output_file_path = rospkg.RosPack().get_path('follow_waypoints')+"/saved_path/pose.csv"
-
-
 waypoints = []
 
 class FollowPath(State):
     def __init__(self):
         State.__init__(self, outcomes=['success'], input_keys=['waypoints'])
         self.frame_id = rospy.get_param('~goal_frame_id','map')
+        self.odom_frame_id = rospy.get_param('~odom_frame_id','odom')
+        self.base_frame_id = rospy.get_param('~base_frame_id','base_footprint')
+        self.duration = rospy.get_param('~wait_duration', 0.0)
         # Get a move_base action client
         self.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
         rospy.loginfo('Connecting to move_base...')
@@ -60,14 +55,13 @@ class FollowPath(State):
                     (waypoint.pose.pose.position.x, waypoint.pose.pose.position.y))
             rospy.loginfo("To cancel the goal: 'rostopic pub -1 /move_base/cancel actionlib_msgs/GoalID -- {}'")
             self.client.send_goal(goal)
+            #This is the loop which exist when the robot is near a certain GOAL point . instead of actionlib #self.client.wait_for_result()
             distance = 10
             while(distance > self.distance_tolerance ):
                 now = rospy.Time.now()
-                self.listener.waitForTransform('odom', 'base_link', now, rospy.Duration(4.0))
-                trans,rot = self.listener.lookupTransform('odom','base_footprint', now)
+                self.listener.waitForTransform(self.odom_frame_id, self.base_frame_id, now, rospy.Duration(4.0))
+                trans,rot = self.listener.lookupTransform(self.odom_frame_id,self.base_frame_id, now)
                 distance = math.sqrt(pow(waypoint.pose.pose.position.x-trans[0],2)+pow(waypoint.pose.pose.position.y-trans[1],2))
-                
-            #self.client.wait_for_result()
         return 'success'
 
 def convert_PoseWithCovArray_to_PoseArray(waypoints):
@@ -123,7 +117,7 @@ class GetPath(State):
 
         self.start_journey_bool = False
 
-        # Start thread to listen start jorney
+        # Start thread to listen start jorney for loading the saved poses from follow_waypoints/saved_path/poses.csv
         def wait_for_start_journey():
             """thread worker function"""
             data_from_start_journey = rospy.wait_for_message('start_journey', Empty)
