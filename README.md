@@ -2,7 +2,7 @@
 
 A package that will buffer `move_base` goals until instructed to navigate to all waypoints in sequence.
 
-![follow_waypoints](readme_images/magni_follow_waypoint.gif "rviz")
+![follow_waypoints](readme_images/follow_waypoint.gif "rviz")
 
 
 ```

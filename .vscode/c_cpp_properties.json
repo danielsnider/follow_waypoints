@@ -1,0 +1,25 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/home/chris/magni_gazebo_ws/devel/include",
+                "/opt/ros/kinetic/include",
+                "/home/chris/magni_gazebo_ws/src/gazebo_ros_pkgs/gazebo_plugins/include",
+                "/home/chris/magni_gazebo_ws/src/gazebo_ros_pkgs/gazebo_ros/include",
+                "/home/chris/magni_gazebo_ws/src/gazebo_ros_pkgs/gazebo_ros_control/include",
+                "/home/chris/magni_gazebo_ws/src/waypoint-global-planner/include",
+                "/usr/include"
+            ],
+            "name": "Linux",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}
