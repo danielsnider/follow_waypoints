@@ -67,7 +67,7 @@ class FollowPath(State):
 def convert_PoseWithCovArray_to_PoseArray(waypoints):
     """Used to publish waypoints as pose array so that you can see them in rviz, etc."""
     poses = PoseArray()
-    poses.header.frame_id = 'map'
+    poses.header.frame_id = rospy.get_param('~goal_frame_id','map')
     poses.poses = [pose.pose.pose for pose in waypoints]
     return poses
 
