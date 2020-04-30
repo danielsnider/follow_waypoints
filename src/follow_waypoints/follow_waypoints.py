@@ -14,7 +14,7 @@ import rospkg
 import csv
 
 
-
+#Path for saving and retreiving the pose.csv file 
 output_file_path = rospkg.RosPack().get_path('follow_waypoints')+"/saved_path/pose.csv"
 waypoints = []
 
@@ -103,6 +103,7 @@ class GetPath(State):
         self.path_ready = False
 
         # Start thread to listen for when the path is ready (this function will end then)
+        # Also will save the clicked path to pose.csv file
         def wait_for_path_ready():
             """thread worker function"""
             data = rospy.wait_for_message('/path_ready', Empty)
@@ -117,12 +118,12 @@ class GetPath(State):
 
         self.start_journey_bool = False
 
-        # Start thread to listen start jorney for loading the saved poses from follow_waypoints/saved_path/poses.csv
+        # Start thread to listen start_jorney 
+        # for loading the saved poses from follow_waypoints/saved_path/poses.csv
         def wait_for_start_journey():
             """thread worker function"""
             data_from_start_journey = rospy.wait_for_message('start_journey', Empty)
             rospy.loginfo('Recieved path READY start_journey')
-            # Wait for published waypoints
             with open(output_file_path, 'r') as file:
                 reader = csv.reader(file, delimiter = ',')
                 for row in reader:
@@ -150,7 +151,7 @@ class GetPath(State):
         rospy.loginfo("To start following saved waypoints: 'rostopic pub /start_journey std_msgs/Empty -1'")
 
 
-        # Wait for published waypoints or saved path not loaded
+        # Wait for published waypoints or saved path  loaded
         while (not self.path_ready and not self.start_journey_bool):
             try:
                 pose = rospy.wait_for_message(topic, PoseWithCovarianceStamped, timeout=1)
