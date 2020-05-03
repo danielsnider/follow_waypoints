@@ -26,7 +26,7 @@ rosrun follow_waypoints follow_waypoints.py
 rosparam set wait_duration 5.0
 ```
 
-#### A distance threshold parameter. Issue the next goal target if the robot reaches within this distance. The default value is set to 0.0 distance which disables the feature.
+#### A distance threshold parameter. Issue the next goal target if the robot reaches within this distance. This has the effect of smoothing motion and not stopping at each waypoint. The default value is set to 0.0 distance which disables the feature.
 
 ```
 rosparam set waypoint_distance_tolerance 0.5
