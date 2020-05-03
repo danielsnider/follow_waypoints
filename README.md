@@ -2,28 +2,48 @@
 
 A package that will buffer `move_base` goals until instructed to navigate to all waypoints in sequence.
 
+![follow_waypoints](https://github.com/danielsnider/follow_waypoints/blob/master/readme_images/follow_waypoints_rviz.png "rviz")
+
+## Installation
+
+```
+  $ sudo apt-get install ros-kinetic-follow-waypoints
+```
+
+
+**Documentation on wiki: [http://wiki.ros.org/follow_waypoints](http://wiki.ros.org/follow_waypoints)**
 ![follow_waypoints](readme_images/follow_waypoint.gif "rviz")
 
+ ### New features not documented on wiki: 
+
+
+#### The code can be run in this way:
 
 ```
 rosrun follow_waypoints follow_waypoints.py
- 
 ```
 
-#### To save the path follow the usual procedure of click with 2DPoseEstimate 
+#### A wait_duration parameter. This sets wait duration in between waypoints. The default value is set to 0.0 sec.
 
 ```
-rostopic pub /path_ready std_msgs/Empty -1
+rosparam set wait_duration 5.0
 ```
-#### This will save the list of pose in the following directory
+
+#### A distance threshold parameter. Issue the next goal target if the robot reaches within this distance. The default value is set to 0.0 distance which disables the feature.
+
+```
+rosparam set waypoint_distance_tolerance 0.5
+```
+
+#### Following waypoints will save the list of poses to a file in the following directory:
 
 ```
 follow_waypoints/saved_path/pose.csv
 ```
 
-
-#### To load a previously save path
+#### To load the previously save path:
 
 ```
 rostopic pub /start_journey std_msgs/Empty -1
 ```
+
