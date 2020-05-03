@@ -2,12 +2,28 @@
 
 A package that will buffer `move_base` goals until instructed to navigate to all waypoints in sequence.
 
-![follow_waypoints](https://github.com/danielsnider/follow_waypoints/blob/master/readme_images/follow_waypoints_rviz.png "rviz")
+![follow_waypoints](readme_images/follow_waypoint.gif "rviz")
 
-## Installation
 
 ```
-  $ sudo apt-get install ros-kinetic-follow-waypoints
+rosrun follow_waypoints follow_waypoints.py
+ 
 ```
 
-**Full documentation on wiki: [http://wiki.ros.org/follow_waypoints](http://wiki.ros.org/follow_waypoints)**
+#### To save the path follow the usual procedure of click with 2DPoseEstimate 
+
+```
+rostopic pub /path_ready std_msgs/Empty -1
+```
+#### This will save the list of pose in the following directory
+
+```
+follow_waypoints/saved_path/pose.csv
+```
+
+
+#### To load a previously save path
+
+```
+rostopic pub /start_journey std_msgs/Empty -1
+```
