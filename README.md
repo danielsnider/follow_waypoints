@@ -10,12 +10,9 @@ A package that will buffer `move_base` goals until instructed to navigate to all
   $ sudo apt-get install ros-kinetic-follow-waypoints
 ```
 
-
 **Documentation on wiki: [http://wiki.ros.org/follow_waypoints](http://wiki.ros.org/follow_waypoints)**
-![follow_waypoints](readme_images/follow_waypoint.gif "rviz")
 
- ### New features not documented on wiki: 
-
+### New features not documented on wiki: 
 
 #### The code can be run in this way:
 
@@ -47,3 +44,4 @@ follow_waypoints/saved_path/pose.csv
 rostopic pub /start_journey std_msgs/Empty -1
 ```
 
+![follow_waypoints](readme_images/follow_waypoint.gif "rviz")
