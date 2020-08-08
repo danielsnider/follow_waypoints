@@ -13,6 +13,31 @@ import math
 import rospkg
 import csv
 import time
+from geometry_msgs.msg import PoseStamped
+import traceback
+
+# change Pose to the correct frame 
+def changePose(waypoint):
+    if not hasattr(changePose, 'listener'):
+        changePose.listener = tf.TransformListener()
+    tmp = PoseStamped()
+    print(waypoint.header.frame_id)
+    print("------------------------------------")
+    #rospy.sleep(2)
+    tmp.header.frame_id = waypoint.header.frame_id
+    tmp.pose = waypoint.pose.pose
+    try:
+        changePose.listener.waitForTransform(
+            "map", tmp.header.frame_id, rospy.Time(0), rospy.Duration(3.0))
+        pose = changePose.listener.transformPose("map", tmp)
+        ret = PoseWithCovarianceStamped()
+        ret.header.frame_id = "map"
+        ret.pose.pose = pose.pose
+        return ret
+    except:
+        traceback.print_exc()
+        rospy.loginfo("cannot change to map ")
+        exit()
 
 
 #Path for saving and retreiving the pose.csv file 
@@ -164,7 +189,7 @@ class GetPath(State):
                 else:
                     raise e
             rospy.loginfo("Recieved new waypoint")
-            waypoints.append(pose)
+            waypoints.append(changePose(pose))
             # publish waypoint queue as pose array so that you can see them in rviz, etc.
             self.poseArray_publisher.publish(convert_PoseWithCovArray_to_PoseArray(waypoints))
 
