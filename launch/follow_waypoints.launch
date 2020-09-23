@@ -1,8 +1,20 @@
+<?xml version="1.0"?>
 <launch>
-  <env name="ROSCONSOLE_FORMAT" value="[${severity}][${thread}][${node}/${function}:${line}]: ${message}"/>
+  <arg name="output" default="screen"/>
+  <arg name="goal_frame_id" default="map"/>
+  <arg name="wait_duration" default="0.0"/>
+  <arg name="waypoint_distance_tolerance" default="0.0"/>
+  <arg name="waypoints_to_follow_topic" default="/initialpose"/>
+  <arg name="waypoints_list_topic" default="/waypoints"/>
+  <arg name="waypoints_are_poses" default="true"/>
 
-  <node pkg="follow_waypoints" type="follow_waypoints" name="follow_waypoints" output="screen" clear_params="true">
-    <param name="goal_frame_id" value="map"/>
-  </node>
+  <param name="goal_frame_id" value="$(arg goal_frame_id)"/>
+  <param name="wait_duration" value="$(arg wait_duration)"/>
+  <param name="waypoint_distance_tolerance" value="$(arg waypoint_distance_tolerance)"/>
+  <param name="waypoints_to_follow_topic" value="$(arg waypoints_to_follow_topic)"/>
+  <param name="waypoints_list_topic" value="$(arg waypoints_list_topic)"/>
+  <param name="waypoints_are_poses" value="$(arg waypoints_are_poses)" type="bool"/>
+
+  <node pkg="follow_waypoints" type="follow_waypoints" name="follow_waypoints" output="$(arg output)" required="true"/>
 </launch>
 
