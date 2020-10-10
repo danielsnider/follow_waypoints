@@ -4,7 +4,8 @@ import threading
 import rospy
 import actionlib
 from smach import State,StateMachine
-from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from geometry_msgs.msg import PoseStamped
+from mbf_msgs.msg import MoveBaseAction, MoveBaseGoal, MoveBaseResult
 from geometry_msgs.msg import PoseWithCovarianceStamped, PoseArray ,PointStamped
 from std_msgs.msg import Empty
 from tf import TransformListener
@@ -13,7 +14,7 @@ import math
 import rospkg
 import csv
 import time
-
+import smach_ros
 
 #Path for saving and retreiving the pose.csv file 
 output_file_path = rospkg.RosPack().get_path('follow_waypoints')+"/saved_path/pose.csv"
@@ -27,11 +28,11 @@ class FollowPath(State):
         self.base_frame_id = rospy.get_param('~base_frame_id','base_footprint')
         self.duration = rospy.get_param('~wait_duration', 0.0)
         # Get a move_base action client
-        self.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
-        rospy.loginfo('Connecting to move_base...')
+        self.client = actionlib.SimpleActionClient('move_base_flex/move_base', MoveBaseAction)
+        rospy.loginfo('Connecting to move_base flex...')
         self.client.wait_for_server()
-        rospy.loginfo('Connected to move_base.')
-        rospy.loginfo('Starting a tf listner.')
+        rospy.loginfo('Connected to move_base flex.')
+        rospy.loginfo('Starting a tf listner...')
         self.tf = TransformListener()
         self.listener = tf.TransformListener()
         self.distance_tolerance = rospy.get_param('waypoint_distance_tolerance', 0.0)
@@ -45,14 +46,19 @@ class FollowPath(State):
                 rospy.loginfo('The waypoint queue has been reset.')
                 break
             # Otherwise publish next waypoint as goal
-            goal = MoveBaseGoal()
-            goal.target_pose.header.frame_id = self.frame_id
-            goal.target_pose.pose.position = waypoint.pose.pose.position
-            goal.target_pose.pose.orientation = waypoint.pose.pose.orientation
-            rospy.loginfo('Executing move_base goal to position (x,y): %s, %s' %
+            pose = PoseStamped()
+            pose.pose.position = waypoint.pose.pose.position
+            pose.pose.orientation = waypoint.pose.pose.orientation
+            pose.header.frame_id = self.frame_id
+            goal = MoveBaseGoal(target_pose=pose)
+            goal.controller = 'eband'
+            goal.planner = 'GlobalPlanner'
+            goal.recovery_behaviors = ['clear_costmap', 'rotate_recovery']
+
+            rospy.loginfo('Executing move_base flex goal to position (x,y): %s, %s' %
                     (waypoint.pose.pose.position.x, waypoint.pose.pose.position.y))
-            rospy.loginfo("To cancel the goal: 'rostopic pub -1 /move_base/cancel actionlib_msgs/GoalID -- {}'")
-            self.client.send_goal(goal)
+            rospy.loginfo("To cancel the goal: 'rostopic pub -1 move_base_flex/move_base/cancel actionlib_msgs/GoalID -- {}'")
+            self.client.send_goal(goal, done_cb=move_done_cb, feedback_cb=status_cb, active_cb=active_status_cb)
             if not self.distance_tolerance > 0.0:
                 self.client.wait_for_result()
                 rospy.loginfo("Waiting for %f sec..." % self.duration)
@@ -66,6 +72,18 @@ class FollowPath(State):
                     trans,rot = self.listener.lookupTransform(self.odom_frame_id,self.base_frame_id, now)
                     distance = math.sqrt(pow(waypoint.pose.pose.position.x-trans[0],2)+pow(waypoint.pose.pose.position.y-trans[1],2))
         return 'success'
+
+def move_done_cb(status, result):
+    if result.outcome == MoveBaseResult.SUCCESS:
+        rospy.loginfo("************ Follow path action succeeded ***************")
+    else:
+        rospy.logerr("Follow path action failed with error code [%d]: %s", result.outcome, result.message)
+
+def status_cb(feedback):
+    rospy.loginfo("************ Feedback : %s ************" % str(feedback))
+
+def active_status_cb():
+    rospy.loginfo("************ Action server is processing the goal ************")
 
 def convert_PoseWithCovArray_to_PoseArray(waypoints):
     """Used to publish waypoints as pose array so that you can see them in rviz, etc."""
@@ -115,7 +133,7 @@ class GetPath(State):
             with open(output_file_path, 'w') as file:
                 for current_pose in waypoints:
                     file.write(str(current_pose.pose.pose.position.x) + ',' + str(current_pose.pose.pose.position.y) + ',' + str(current_pose.pose.pose.position.z) + ',' + str(current_pose.pose.pose.orientation.x) + ',' + str(current_pose.pose.pose.orientation.y) + ',' + str(current_pose.pose.pose.orientation.z) + ',' + str(current_pose.pose.pose.orientation.w)+ '\n')
-	        rospy.loginfo('poses written to '+ output_file_path)	
+                rospy.loginfo('poses written to '+ output_file_path)
         ready_thread = threading.Thread(target=wait_for_path_ready)
         ready_thread.start()
 
@@ -131,19 +149,25 @@ class GetPath(State):
                 reader = csv.reader(file, delimiter = ',')
                 for row in reader:
                     print row
+
+            with open(output_file_path, 'r') as file:
+                reader = csv.reader(file, delimiter = ',')
+                for row in reader:
                     current_pose = PoseWithCovarianceStamped() 
                     current_pose.pose.pose.position.x     =    float(row[0])
                     current_pose.pose.pose.position.y     =    float(row[1])
                     current_pose.pose.pose.position.z     =    float(row[2])
-                    current_pose.pose.pose.orientation.x = float(row[3])
-                    current_pose.pose.pose.orientation.y = float(row[4])
-                    current_pose.pose.pose.orientation.z = float(row[5])
-                    current_pose.pose.pose.orientation.w = float(row[6])
+                    goal_yaw = math.radians(float(row[3]))
+                    rospy.loginfo('Angle in Radians %f' % goal_yaw)
+                    goal_quaternion = tf.transformations.quaternion_from_euler(0.0, 0.0, goal_yaw)
+                    current_pose.pose.pose.orientation.x = goal_quaternion[0]
+                    current_pose.pose.pose.orientation.y = goal_quaternion[1]
+                    current_pose.pose.pose.orientation.z = goal_quaternion[2]
+                    current_pose.pose.pose.orientation.w = goal_quaternion[3]
                     waypoints.append(current_pose)
                     self.poseArray_publisher.publish(convert_PoseWithCovArray_to_PoseArray(waypoints))
             self.start_journey_bool = True
-            
-            
+
         start_journey_thread = threading.Thread(target=wait_for_start_journey)
         start_journey_thread.start()
 
@@ -183,7 +207,6 @@ class PathComplete(State):
 
 def main():
     rospy.init_node('follow_waypoints')
-
     sm = StateMachine(outcomes=['success'])
 
     with sm:
@@ -196,4 +219,8 @@ def main():
         StateMachine.add('PATH_COMPLETE', PathComplete(),
                            transitions={'success':'GET_PATH'})
 
+    sis = smach_ros.IntrospectionServer('follow_waypoints', sm, '/FOLLOW_WAYPOINTS')
+    sis.start()
     outcome = sm.execute()
+
+    sis.stop()
