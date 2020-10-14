@@ -7,6 +7,7 @@
   <arg name="waypoints_to_follow_topic" default="/initialpose"/>
   <arg name="waypoints_list_topic" default="/waypoints"/>
   <arg name="waypoints_are_poses" default="true"/>
+  <arg name="patrol_mode" default="false"/>
 
   <param name="goal_frame_id" value="$(arg goal_frame_id)"/>
   <param name="wait_duration" value="$(arg wait_duration)"/>
@@ -14,7 +15,12 @@
   <param name="waypoints_to_follow_topic" value="$(arg waypoints_to_follow_topic)"/>
   <param name="waypoints_list_topic" value="$(arg waypoints_list_topic)"/>
   <param name="waypoints_are_poses" value="$(arg waypoints_are_poses)" type="bool"/>
+  <param name="patrol_mode" value="$(arg patrol_mode)" type="bool"/>
 
   <node pkg="follow_waypoints" type="follow_waypoints" name="follow_waypoints" output="$(arg output)" required="true"/>
+
+  <node name="$(anon dynparam)" pkg="dynamic_reconfigure" type="dynparam" args="set_from_parameters follow_waypoints">
+    <param name="patrol_mode" type="bool" value="$(arg patrol_mode)" />
+  </node>
 </launch>
 

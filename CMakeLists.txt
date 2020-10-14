@@ -4,6 +4,7 @@ project(follow_waypoints)
 
 find_package(catkin REQUIRED COMPONENTS
   actionlib
+  dynamic_reconfigure
   geometry_msgs
   move_base_msgs
   rospy
@@ -11,6 +12,9 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 catkin_python_setup()
+generate_dynamic_reconfigure_options(
+  cfg/FollowWaypoints.cfg
+)
 
 catkin_package(
   LIBRARIES ${PROJECT_NAME}
