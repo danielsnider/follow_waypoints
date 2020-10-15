@@ -9,14 +9,14 @@ import tf
 from actionlib_msgs.msg import GoalID
 from dynamic_reconfigure.server import Server as DynServer
 from follow_waypoints.cfg import FollowWaypointsConfig
-from geometry_msgs.msg import (PointStamped, PoseArray,
-                               PoseWithCovarianceStamped, Quaternion)
+from geometry_msgs.msg import PointStamped, PoseArray, PoseWithCovarianceStamped, Quaternion
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from std_srvs.srv import Trigger
 
 # Miscellaneous functions
 info = rospy.loginfo
 warn = rospy.logwarn
+
 
 class Commander(object):
     """
@@ -63,12 +63,12 @@ class Commander(object):
         self.listener = tf.TransformListener()
 
         # Subscribers & Publishers & Services initialisation ----------------------------------
-        self.path_ready_srv = rospy.Service('path_ready', Trigger, self.make_path_ready)
-        self.path_reset_srv = rospy.Service('path_reset', Trigger, self.do_path_reset)
+        self.path_ready_srv = rospy.Service("path_ready", Trigger, self.make_path_ready)
+        self.path_reset_srv = rospy.Service("path_reset", Trigger, self.do_path_reset)
 
         # Publish waypoints as pose array - visualise them in rviz
         self.pose_array_publisher = rospy.Publisher(
-            self.waypoints_list_topic, PoseArray, queue_size=1
+            self.waypoints_list_topic, PoseArray, queue_size=1, latch=True
         )
 
         # Listen to the goal locations
@@ -91,12 +91,13 @@ class Commander(object):
 
     def do_path_reset(self, _):
         warn("Issuing cancel command to move_base")
-        pub = rospy.Publisher('/move_base/cancel', GoalID, queue_size=1)
+        pub = rospy.Publisher("/move_base/cancel", GoalID, queue_size=1)
         pub.publish(GoalID())
         warn("move_base goal cancelled.")
 
         if self.waypoints:
             self.waypoints = collections.deque()
+            self.pub_waypoints_list()
 
         return (True, "")
 
@@ -160,7 +161,9 @@ class Commander(object):
             goal = self.waypoints[0]
             if self.dyn_config["patrol_mode"]:
                 if len(self.waypoints) == 1:
-                    warn("In patrol mode but wth only one given waypoint, will simply navigate to it...")
+                    warn(
+                        "In patrol mode but wth only one given waypoint, will simply navigate to it..."
+                    )
                     self.waypoints.pop()
                 else:
                     self.waypoints.rotate(-1)
@@ -197,7 +200,6 @@ class Commander(object):
             # iteration
             self.pub_waypoints_list()
 
-
     def run(self):
         while not rospy.is_shutdown():
             self.run_once()
@@ -230,6 +232,7 @@ def toPoseWithCov(point):
 def main():
     commander = Commander()
     commander.run()
+
 
 if __name__ == "__main__":
     main()
