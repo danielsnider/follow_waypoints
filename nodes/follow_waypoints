@@ -175,7 +175,7 @@ class Commander(object):
             if not self.distance_tolerance > 0.0:
                 # just wait until move_base reaches the goal...
                 self.move_base_client.wait_for_result()
-                info("Waiting for %f sec..." % self.wait_duration)
+                info("Waiting for %f seconds before proceeding to the next goal..." % self.wait_duration)
                 time.sleep(self.wait_duration)
             else:
                 raise NotImplementedError("distance_tolerance not implemented yet.")
