@@ -141,7 +141,7 @@ class GetPath(State):
             with open(output_file_path, 'w') as file:
                 for current_pose in waypoints:
                     file.write(str(current_pose.pose.pose.position.x) + ',' + str(current_pose.pose.pose.position.y) + ',' + str(current_pose.pose.pose.position.z) + ',' + str(current_pose.pose.pose.orientation.x) + ',' + str(current_pose.pose.pose.orientation.y) + ',' + str(current_pose.pose.pose.orientation.z) + ',' + str(current_pose.pose.pose.orientation.w)+ '\n')
-	        rospy.loginfo('poses written to '+ output_file_path)	
+        rospy.loginfo('poses written to '+ output_file_path)	
         ready_thread = threading.Thread(target=wait_for_path_ready)
         ready_thread.start()
 
@@ -156,7 +156,7 @@ class GetPath(State):
             with open(output_file_path, 'r') as file:
                 reader = csv.reader(file, delimiter = ',')
                 for row in reader:
-                    print row
+                    print (row)
                     current_pose = PoseWithCovarianceStamped() 
                     current_pose.pose.pose.position.x     =    float(row[0])
                     current_pose.pose.pose.position.y     =    float(row[1])
