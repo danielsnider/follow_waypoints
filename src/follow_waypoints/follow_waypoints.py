@@ -173,7 +173,7 @@ class GetPath(State):
         start_journey_thread = threading.Thread(target=wait_for_start_journey)
         start_journey_thread.start()
 
-        topic = self.addpose_topic;
+        topic = self.addpose_topic
         rospy.loginfo("Waiting to recieve waypoints via Pose msg on topic %s" % topic)
         rospy.loginfo("To start following waypoints: 'rostopic pub /path_ready std_msgs/Empty -1'")
         rospy.loginfo("OR")
@@ -185,10 +185,8 @@ class GetPath(State):
             try:
                 pose = rospy.wait_for_message(topic, PoseWithCovarianceStamped, timeout=1)
             except rospy.ROSException as e:
-                if 'timeout exceeded' in e.message:
-                    continue  # no new waypoint within timeout, looping...
-                else:
-                    raise e
+                continue
+
             rospy.loginfo("Recieved new waypoint")
             waypoints.append(changePose(pose, "map"))
             # publish waypoint queue as pose array so that you can see them in rviz, etc.
