@@ -81,13 +81,20 @@ class FollowPath(State):
                 rospy.loginfo("Waiting for %f sec..." % self.duration)
                 time.sleep(self.duration)
             else:
-                #This is the loop which exist when the robot is near a certain GOAL point.
-                distance = 10
-                while(distance > self.distance_tolerance):
+                rate = rospy.Rate(10)
+                while not rospy.is_shutdown():
                     now = rospy.Time.now()
-                    self.listener.waitForTransform(self.odom_frame_id, self.base_frame_id, now, rospy.Duration(4.0))
-                    trans,rot = self.listener.lookupTransform(self.odom_frame_id,self.base_frame_id, now)
-                    distance = math.sqrt(pow(waypoint.pose.pose.position.x-trans[0],2)+pow(waypoint.pose.pose.position.y-trans[1],2))
+                    self.listener.waitForTransform(
+                        self.odom_frame_id,
+                        self.base_frame_id, now, rospy.Duration(4.0))
+                    trans, rot = self.listener.lookupTransform(
+                        self.odom_frame_id, self.base_frame_id, now)
+                    distance = math.sqrt(
+                        pow(waypoint.pose.pose.position.x-trans[0], 2)
+                        + pow(waypoint.pose.pose.position.y-trans[1], 2))
+                    if distance < self.distance_tolerance:
+                        break
+                    rate.sleep()
         return 'success'
 
 def convert_PoseWithCovArray_to_PoseArray(waypoints):
