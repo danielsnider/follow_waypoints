@@ -92,6 +92,7 @@ class FollowPath(State):
                     distance = math.sqrt(
                         pow(waypoint.pose.pose.position.x-trans[0], 2)
                         + pow(waypoint.pose.pose.position.y-trans[1], 2))
+                    rospy.loginfo("Distance to the goal %f" % distance)
                     if distance < self.distance_tolerance:
                         break
                     rate.sleep()
