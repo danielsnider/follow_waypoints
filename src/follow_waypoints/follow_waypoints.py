@@ -14,6 +14,7 @@ import rospkg
 import csv
 import time
 from geometry_msgs.msg import PoseStamped
+import dynamic_reconfigure.client
 
 # change Pose to the correct frame 
 def changePose(waypoint,target_frame):
@@ -57,9 +58,25 @@ class FollowPath(State):
         rospy.loginfo('Starting a tf listner.')
         self.tf = TransformListener()
         self.listener = tf.TransformListener()
-        self.distance_tolerance = rospy.get_param('waypoint_distance_tolerance', 0.0)
+
+        self.actual_xy_goal_tolerance = rospy.get_param("~xy_goal_tolerance", 0.3)
+        self.actual_yaw_goal_tolerance = rospy.get_param("~yaw_goal_tolerance", 3.14)
+
+        self.last_xy_goal_tolerance = rospy.get_param('/move_base/TebLocalPlannerROS/xy_goal_tolerance')
+        self.last_yaw_goal_tolerance = rospy.get_param('/move_base/TebLocalPlannerROS/yaw_goal_tolerance')
+
+        self.clientDR = dynamic_reconfigure.client.Client("move_base/TebLocalPlannerROS", timeout=30, config_callback=self.callbackDR)
+
+    def callbackDR(self, config):
+        rospy.loginfo("Navigation tolerance set to [xy_goal:{xy_goal_tolerance}, yaw_goal:{yaw_goal_tolerance}]".format(**config))
 
     def execute(self, userdata):
+
+        self.clientDR.update_configuration({
+            "xy_goal_tolerance":self.actual_xy_goal_tolerance, 
+            "yaw_goal_tolerance":self.actual_yaw_goal_tolerance
+            })
+
         global waypoints
         # Execute waypoints each in sequence
         for waypoint in waypoints:
@@ -76,18 +93,16 @@ class FollowPath(State):
                     (waypoint.pose.pose.position.x, waypoint.pose.pose.position.y))
             rospy.loginfo("To cancel the goal: 'rostopic pub -1 /move_base/cancel actionlib_msgs/GoalID -- {}'")
             self.client.send_goal(goal)
-            if not self.distance_tolerance > 0.0:
-                self.client.wait_for_result()
-                rospy.loginfo("Waiting for %f sec..." % self.duration)
-                time.sleep(self.duration)
-            else:
-                #This is the loop which exist when the robot is near a certain GOAL point.
-                distance = 10
-                while(distance > self.distance_tolerance):
-                    now = rospy.Time.now()
-                    self.listener.waitForTransform(self.odom_frame_id, self.base_frame_id, now, rospy.Duration(4.0))
-                    trans,rot = self.listener.lookupTransform(self.odom_frame_id,self.base_frame_id, now)
-                    distance = math.sqrt(pow(waypoint.pose.pose.position.x-trans[0],2)+pow(waypoint.pose.pose.position.y-trans[1],2))
+
+            self.client.wait_for_result()
+            rospy.loginfo("Waiting for %f sec..." % self.duration)
+            time.sleep(self.duration)
+
+        self.clientDR.update_configuration({
+            "xy_goal_tolerance":self.last_xy_goal_tolerance, 
+            "yaw_goal_tolerance":self.last_yaw_goal_tolerance
+            })
+
         return 'success'
 
 def convert_PoseWithCovArray_to_PoseArray(waypoints):
