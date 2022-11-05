@@ -130,7 +130,7 @@ class GetPath(State):
         reset_thread.start()
 
     # Start thread to listen for reset messages to clear the waypoint queue
-    def wait_for_path_reset():
+    def wait_for_path_reset(self):
         """thread worker function"""
         global waypoints
         while not rospy.is_shutdown():
