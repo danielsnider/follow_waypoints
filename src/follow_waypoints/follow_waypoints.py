@@ -76,7 +76,7 @@ class FollowPath(State):
 
         self.save_poses = rospy.ServiceProxy('/save_waypoint', save_point)
 
-    def save(self, request): # adicionar nome
+    def save(self, request): 
         resp = self.save_poses(request)
         return str(resp)
 
