@@ -17,7 +17,19 @@ class SaveWaypoint():
         rospy.Service('save_waypoint', save_point, self.handler)
         rospy.loginfo('Ready to detect!')
         
-    def save(self, name):
+    def angle():
+        pass
+
+    def open():
+        pass
+
+    def save():
+        pass
+
+    def create():
+        pass
+
+    def execute(self, name):
         list = []
 
         with open('/social_ws/src/waypoints/way.yaml') as f:
@@ -50,7 +62,7 @@ class SaveWaypoint():
     def handler(self, request):
         num = 0
         while num == 0:
-            resp = self.save(request)
+            resp = self.execute(request)
 
             if resp is True:
                 num = 1
