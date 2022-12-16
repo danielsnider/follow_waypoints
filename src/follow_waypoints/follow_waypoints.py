@@ -16,8 +16,6 @@ import time
 from geometry_msgs.msg import PoseStamped
 import dynamic_reconfigure.client
 
-from robot_nav.srv import *
-
 # change Pose to the correct frame 
 def changePose(waypoint,target_frame):
     if waypoint.header.frame_id == target_frame:
@@ -73,12 +71,6 @@ class FollowPath(State):
         self.last_yaw_goal_tolerance = rospy.get_param('/move_base/TebLocalPlannerROS/yaw_goal_tolerance')
 
         self.clientDR = dynamic_reconfigure.client.Client("move_base/TebLocalPlannerROS", timeout=30, config_callback=self.callbackDR)
-
-        self.save_poses = rospy.ServiceProxy('/save_waypoint', save_point)
-
-    def save(self, request): 
-        resp = self.save_poses(request)
-        return str(resp)
 
     def callbackDR(self, config):
         rospy.loginfo("Navigation tolerance set to [xy_goal:{xy_goal_tolerance}, yaw_goal:{yaw_goal_tolerance}]".format(**config))
@@ -167,7 +159,7 @@ class GetPath(State):
 
     def wait_for_start_journey(self):
         """thread worker function"""
-        self.save_poses("bookstore")
+        data_from_start_journey = rospy.wait_for_message('start_journey', Empty)
         rospy.loginfo('Recieved path READY start_journey')
         with open(journey_file_path, 'r') as file:
         # with open(output_file_path, 'r') as file:
