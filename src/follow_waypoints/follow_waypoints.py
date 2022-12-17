@@ -128,7 +128,7 @@ class FollowPath(State):
 
                     csv_writer.writerow([roll_str, pitch_str, 0.0, 0.0, 0.0, qz, qw])
 
-        #######################################
+        ######################################################################
 
     def callbackDR(self, config):
         rospy.loginfo("Navigation tolerance set to [xy_goal:{xy_goal_tolerance}, yaw_goal:{yaw_goal_tolerance}]".format(**config))
