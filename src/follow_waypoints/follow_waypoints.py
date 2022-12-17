@@ -80,12 +80,12 @@ class FollowPath(State):
         ########################## SAVE WAYPOINTS ############################
 
 
-        foldes_waypoints = '/ws_socialdroids/src/socialdroids/robot_data/data'
+        folder_waypoints = '/ws_socialdroids/src/socialdroids/robot_data/data'
         way_files = []
         pose_files = []
 
         # Read the waypoints from the folder
-        for root, dirs, files in os.walk(foldes_waypoints):
+        for root, dirs, files in os.walk(folder_waypoints):
             for file in files:
                 path = os.path.join(root, file)
                 name, ext = os.path.splitext(file)   
