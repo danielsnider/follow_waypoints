@@ -185,7 +185,7 @@ class GetPath(State):
             try:
                 pose = rospy.wait_for_message(topic, PoseWithCovarianceStamped, timeout=1)
             except rospy.ROSException as e:
-                if 'timeout exceeded' in (e):
+                if 'timeout exceeded' in str(e):
                     continue  # no new waypoint within timeout, looping...
                 else:
                     raise e
